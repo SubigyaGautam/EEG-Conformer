@@ -213,6 +213,21 @@ class Conformer(nn.Sequential):
 
 class ExP():
     def __init__(self, nsub):
+
+        # self.batch_size: Number of samples per batch for training.
+        # self.n_epochs: Number of epochs for training.
+        # self.c_dim: Number of output classes (e.g., 4 classes for classification).
+        # self.lr: Learning rate for the optimizer.
+        # self.b1, self.b2: Beta values for the Adam optimizer.
+        # self.dimension: Dimension of the input data.
+        # self.nSub: Subject number, used for loading data and logging.
+        # self.start_epoch: Starting epoch for training (useful for resuming training).
+        # self.root: Root directory for the dataset.
+        # self.log_write: File handle for logging training progress and results.
+        # self.Tensor, self.LongTensor: Tensor types for GPU computation.
+        # self.criterion_l1, self.criterion_l2, self.criterion_cls: Loss functions for training (L1, L2, and Cross-Entropy Loss).
+        # self.model: Instance of the Conformer model, moved to the GPU and wrapped in DataParallel for multi-GPU training.
+
         super(ExP, self).__init__()
         self.batch_size = 72
         self.n_epochs = 2000
@@ -243,6 +258,10 @@ class ExP():
 
 
     # Segmentation and Reconstruction (S&R) data augmentation
+    # Data Augmentation Process
+    # The method augments data by segmenting and reconstructing parts of the EEG signals.
+    # For each class, it randomly selects segments of the signals, combines them, and creates augmented data.
+    # The augmented data and labels are shuffled and returned as PyTorch tensors.
     def interaug(self, timg, label):  
         aug_data = []
         aug_label = []
@@ -272,6 +291,11 @@ class ExP():
         aug_label = aug_label.long()
         return aug_data, aug_label
 
+    # Data Loading and Preprocessing
+    # The method loads training and test data from .mat files.
+    # It transposes and reshapes the data to match the expected input shape.
+    # It shuffles the training data to ensure randomness.
+    # Standardizes the data to have zero mean and unit variance.
     def get_source_data(self):
         # ! please please recheck if you need validation set 
         # ! and the data segement compared methods used
@@ -314,7 +338,17 @@ class ExP():
         # data shape: (trial, conv channel, electrode channel, time samples)
         return self.allData, self.allLabel, self.testData, self.testLabel
 
-
+    # Training Process
+    # Loading Data: Calls get_source_data to load and preprocess the data.
+    # Creating DataLoaders: Converts the data into PyTorch tensors and creates DataLoader instances for batch processing.
+    # Optimizer Setup: Initializes the Adam optimizer.
+    # Training Loop: Iterates over epochs and batches:
+    # Data Augmentation: Uses the interaug method to augment training data.
+    # Forward Pass: Feeds the data into the model and computes the loss.
+    # Backward Pass: Performs backpropagation and updates model weights.
+    # Evaluation: Every epoch, evaluates the model on the test set and logs performance metrics.
+    # Model Saving: Saves the best model based on test accuracy.
+    # Logging: Writes results to a log file.
     def train(self):
 
         img, label, test_data, test_label = self.get_source_data()
